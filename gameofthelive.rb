@@ -12,6 +12,10 @@ class Gameofthelive
     @cellsLive = cellsLive
   end
 
+  def method_missing(m, *args)
+      puts "There is no method with the name #{m}"
+  end
+
   def start
     existCells = true
     create_living_cells
@@ -26,18 +30,15 @@ class Gameofthelive
 
   def create_living_cells(cellsLive = @cellsLive)
       clearn_cells
-      for i in 0...cellsLive
-        @cellsP[rand(0...@size)][rand(0...@size)] = 1
-      end
+      (0...cellsLive).each { |i|
+        @cellsP[rand(0...@size)][rand(0...@size)] = 1 }
   end
 
 
   def clearn_cells
-      for r in 0...@cellsP.length
-        for c in 0...@cellsP.length
-          @cellsP[r][c] = 0
-        end
-      end
+      (0...@cellsP.length).each { |r|
+      (0...@cellsP.length).each { |c|
+         @cellsP[r][c] = 0   }}
   end
 
 
@@ -53,124 +54,117 @@ class Gameofthelive
   def search_cells(cellsP = @cellsP)
      countCL = 0
      countCD = 0
-     for r in 0...cellsP.length
-       for c in 0...cellsP.length
-         if cellsP[r][c] == 1
-           @rowCL[countCL] = r
-           @columnCL[countCL] = c
-           countCL = countCL + 1
-         else
-           @rowCD[countCD] = r
-           @columnCD[countCD] = c
-           countCD = countCD + 1
-         end
-       end
-     end
+
+     (0...cellsP.length).each { |r|
+     (0...cellsP.length).each { |c|
+       if cellsP[r][c] == 1
+         @rowCL[countCL] = r
+         @columnCL[countCL] = c
+         countCL = countCL + 1
+       else
+         @rowCD[countCD] = r
+         @columnCD[countCD] = c
+         countCD = countCD + 1
+       end }}
+
      pass_cells_primary
      rules_living_cells(countCL)
      rules_dead_cells(countCD)
      pass_cells_secondary
-     puts "#{countCL.to_s}"
      return true if countCL >= 1
 
   end
 
 
   def rules_living_cells(countCL)
-    for c in 0...countCL
 
+    (0...countCL).each do |c|
       rows = -1
       rows2 = 1
+      column = -1
+      column2 = 1
       livecells = 0
+
       if @rowCL[c] == 0
         rows = 0
       else
-       if @rowCL[c] == @size - 1
+       if @rowCL[c] == (@size - 1)
         rows2 = 0
        end
       end
 
-      for c2 in rows..rows2
-          column = -1
-          column2 = 1
-
-          if @columnCL[c] == 0
-            column = 0
-          else
-            if @columnCL[c] == (@size - 1)
-             column2 = 0
-            end
-          end
-
-          for c3 in column..column2
-            if @cellsP[@rowCL[c]+c2][@columnCL[c]+c3] == 1
-              livecells = livecells + 1
-            end
-          end
-      end
-      puts "#{livecells.to_s}"
-      if (livecells-1) == 2 || (livecells-1) == 3
-        @cellsS[@rowCL[c]][@columnCL[c]] = 1
+      if @columnCL[c] == 0
+        column = 0
       else
-        @cellsS[@rowCL[c]][@columnCL[c]] = 0
+        if @columnCL[c] == (@size - 1)
+         column2 = 0
+        end
       end
+
+
+      (rows..rows2).each { |c2|
+      (column..column2).each { |c3|
+        if @cellsP[@rowCL[c]+c2][@columnCL[c]+c3] == 1
+          livecells = livecells + 1
+        end}}
+
+    @cellsS[@rowCL[c]][@columnCL[c]] =  rules_kill_live_cell(livecells)
+
     end
   end
 
+def rules_kill_live_cell(livecells)
+    return ( (livecells-1) == 2 || (livecells-1) == 3) ? 1 : 0
+end
 
   def rules_dead_cells(countCD)
     for c in 0...countCD
       rows = -1
       rows2 = 1
+      column = -1
+      column2 = 1
       livecells = 0
 
       if @rowCD[c] == 0
         rows = 0
       else
-
        if @rowCD[c] == @size - 1
         rows2 = 0
        end
-
       end
 
-      for c2 in rows..rows2
-          column = -1
-          column2 = 1
-
-          if @columnCD[c] == 0
-            column = 0
-          else
-            if @columnCD[c] == (@size - 1)
-             column2 = 0
-            end
-          end
-
-          for c3 in column..column2
-            if @cellsP[@rowCD[c]+c2][@columnCD[c]+c3] == 1
-              livecells = livecells + 1
-            end
-          end
+      if @columnCD[c] == 0
+        column = 0
+      else
+        if @columnCD[c] == (@size - 1)
+         column2 = 0
+        end
       end
 
-      if livecells == 3
-        @cellsS[@rowCD[c]][@columnCD[c]] = 1
-      end
+      (rows..rows2).each { |c2|
+      (column..column2).each { |c3|
+        if @cellsP[@rowCD[c]+c2][@columnCD[c]+c3] == 1
+          livecells = livecells + 1
+        end}}
+
+        @cellsS[@rowCD[c]][@columnCD[c]] = revive_dead_cell(livecells)
+
     end
-
   end
+
+def revive_dead_cell(livecells)
+   return if (livecells == 3)
+     1
+end
 
   def show_cells(cellsP = @cellsP)
 
       (0...cellsP.length).each { |r|
         cellshow = ""
       (0...cellsP.length).each { |c|
-        if cellsP[r][c] == 1
-          cellshow = "#{cellshow.to_s}°"
-        else
-          cellshow = "#{cellshow.to_s}*"
-        end}
+        cellshow = (cellsP[r][c] == 1) ? "#{cellshow.to_s}°" : "#{cellshow.to_s}*"}
       puts cellshow.to_s }
+
   end
 end
 game = Gameofthelive.new
