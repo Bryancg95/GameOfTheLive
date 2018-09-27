@@ -1,6 +1,7 @@
-class Gameofthelive
-
-  def initialize(size = 10,cellsLive = 20)
+require "./createCell.rb"
+class Gameofthelive < Createcell
+  def initialize(size = 10,cellsLive = 10)
+    super
     @cellsP = Array.new(size){Array.new(size)}
     @cellsS = @cellsP
     @size = size
@@ -12,49 +13,26 @@ class Gameofthelive
     @cellsLive = cellsLive
   end
 
+  def start
+    existCells = true
+    @cellsP = create_living_cells(@cellsLive,@cellsP)
+    show_cells(@cellsP)
+    sleep 5
+    while existCells == true
+      existCells = search_cells(@cellsP, @cellsS)
+      puts ""
+      show_cells(@cellsP)
+      sleep 1
+    end
+  end
+
   def method_missing(m, *args)
       puts "There is no method with the name #{m}"
   end
 
-  def start
-    existCells = true
-    create_living_cells
-    show_cells
-    while existCells == true
-      existCells = search_cells
-      puts ""
-      show_cells
-      sleep 4
-    end
-  end
-
-  def create_living_cells(cellsLive = @cellsLive)
-      clearn_cells
-      (0...cellsLive).each { |i|
-        @cellsP[rand(0...@size)][rand(0...@size)] = 1 }
-  end
-
-
-  def clearn_cells
-      (0...@cellsP.length).each { |r|
-      (0...@cellsP.length).each { |c|
-         @cellsP[r][c] = 0   }}
-  end
-
-
-  def pass_cells_primary
-      @cellsS = @cellsP
-  end
-
-  def pass_cells_secondary
-      @cellsP = @cellsS
-  end
-
-
-  def search_cells(cellsP = @cellsP)
+  def search_cells(cellsP,cellsS)
      countCL = 0
      countCD = 0
-
      (0...cellsP.length).each { |r|
      (0...cellsP.length).each { |c|
        if cellsP[r][c] == 1
@@ -66,11 +44,11 @@ class Gameofthelive
          @columnCD[countCD] = c
          countCD = countCD + 1
        end }}
+     @cellsS = cellsP
 
-     pass_cells_primary
      rules_living_cells(countCL)
      rules_dead_cells(countCD)
-     pass_cells_secondary
+     @cellsP = cellsS
      return true if countCL >= 1
 
   end
@@ -147,25 +125,12 @@ end
           livecells = livecells + 1
         end}}
 
-        @cellsS[@rowCD[c]][@columnCD[c]] = revive_dead_cell(livecells)
+      if livecells == 3
+         @cellsS[@rowCD[c]][@columnCD[c]] = 1
+      end
+
 
     end
   end
 
-def revive_dead_cell(livecells)
-   return if (livecells == 3)
-     1
 end
-
-  def show_cells(cellsP = @cellsP)
-
-      (0...cellsP.length).each { |r|
-        cellshow = ""
-      (0...cellsP.length).each { |c|
-        cellshow = (cellsP[r][c] == 1) ? "#{cellshow.to_s}°" : "#{cellshow.to_s}*"}
-      puts cellshow.to_s }
-
-  end
-end
-game = Gameofthelive.new
-game.start
